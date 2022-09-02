@@ -1,0 +1,9 @@
+{
+  "problems": 2,
+  "bonus_factor": [
+    1.2,
+    1.1,
+    1
+  ],
+  "penalty": 2
+}
