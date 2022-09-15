@@ -30,6 +30,7 @@ def main
   when 'post'
     post_res = trans.submit
     puts post_res.status
+    puts post_res.pretty_read
   end
 end
 
@@ -63,9 +64,7 @@ class Trans
     filenames_res = get_filenames(chuncks_num)
     return unless prob_info_res.success? and filenames_res.success?
 
-    path = "./problems/#{prob_info_res.parse['id']}/"
-
-    Dir.mkdir path unless Dir.exist? path
+    path = './problems/'
     File.write(path + 'info.json', prob_info_res.pretty_read)
 
     filenames_res.filenames.each do |filename|
@@ -76,13 +75,7 @@ class Trans
 
   def submit
     answer = File.read './submit.json'
-    res = Response.new @http.post('/problem', answer, @submit_header), Response::Type::SUBMIT
-    return res unless res.success?
-
-    problem_path = "./problems/#{res.parse['problem_id']}/"
-    FileUtils.copy('./submit.json', problem_path)
-    File.open(problem_path + 'responce.json', 'w') { |file| file.puts res.read }
-    res
+    Response.new @http.post('/problem', answer, @submit_header), Response::Type::SUBMIT
   end
 end
 
