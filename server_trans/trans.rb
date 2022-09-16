@@ -3,7 +3,6 @@
 require 'net/http'
 require 'uri'
 require 'json'
-require 'fileutils'
 
 def main
   trans = Trans.new(
@@ -64,8 +63,7 @@ class Trans
     filenames_res = get_filenames(chuncks_num)
     return unless prob_info_res.success? and filenames_res.success?
 
-    path = './problems/'
-    File.write(path + 'info.json', prob_info_res.pretty_read)
+    File.write('./problem_info.json', prob_info_res.pretty_read)
 
     filenames_res.filenames.each do |filename|
       res = Response.new @http.request_get('/problem/chunks/' + filename, @header), Response::Type::PROBLEM
@@ -74,8 +72,15 @@ class Trans
   end
 
   def submit
-    answer = File.read './submit.json'
-    Response.new @http.post('/problem', answer, @submit_header), Response::Type::SUBMIT
+    Response.new @http.post('/problem', Trans.make_submit, @submit_header), Response::Type::SUBMIT
+  end
+
+  def self.make_submit
+    result = File.read('./result.txt').split.map(&:to_i)
+    probabs = result.map.with_index { |prob, idx| [prob, format('%02d', idx % 44 + 1)] }
+    probabs.sort_by! { |prob, idx| [-prob, idx] }
+    prob_info = JSON.parse(File.read('./problem_info.json'))
+    JSON.generate({ 'problem-id': prob_info['id'], 'answers': probabs.take(prob_info['data']).map(&:last) })
   end
 end
 
