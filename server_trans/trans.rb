@@ -72,15 +72,20 @@ class Trans
   end
 
   def submit
-    Response.new @http.post('/problem', Trans.make_submit, @submit_header), Response::Type::SUBMIT
+    subm = Trans.make_submit
+    Response.new @http.post('/problem', subm, @submit_header), Response::Type::SUBMIT
   end
 
   def self.make_submit
-    result = File.read('./result.txt').split.map(&:to_i)
-    probabs = result.map.with_index { |prob, idx| [prob, format('%02d', idx % 44 + 1)] }
-    probabs.sort_by! { |prob, idx| [-prob, idx] }
+    result = File.read('./result.txt')
     prob_info = JSON.parse(File.read('./problem_info.json'))
-    JSON.generate({ 'problem-id': prob_info['id'], 'answers': probabs.take(prob_info['data']).map(&:last) })
+    probabs = result.split.map.with_index { |prob, idx| [prob.to_i, format('%02d', idx % 44 + 1)] }
+    probabs.sort_by! { |prob, idx| [-prob, idx] }
+
+    subm = JSON.pretty_generate({ 'problem-id': prob_info['id'], 'answers': probabs.take(prob_info['data']).map(&:last) })
+    File.open("./history/results/#{prob_info['id']}.txt", 'w') { |file| file.puts result }
+    File.open("./history/submits/#{prob_info['id']}.json", 'w') { |file| file.puts subm }
+    subm
   end
 end
 
