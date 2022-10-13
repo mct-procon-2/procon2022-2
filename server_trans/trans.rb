@@ -68,13 +68,14 @@ class Trans
 
     filenames_res.filenames.each do |filename|
       res = Response.new @http.request_get('/problem/chunks/' + filename, @header), Response::Type::PROBLEM
-      File.open(path + filename, 'wb') { |file| file.puts res.read }
+      File.open("./problems/" + filename, 'wb') { |file| file.puts res.read }
     end
   end
 
   # @param [int] probability_threshold この確率未満の札は取らない(%表記)
   def submit(probability_threshold)
     subm = Trans.make_submit probability_threshold
+    prob_info = JSON.parse(File.read('./problem_info.json'))
     Response.new @http.post('/problem', subm, @submit_header), Response::Type::SUBMIT
   end
 
@@ -84,8 +85,9 @@ class Trans
     probabs = result.split.map.with_index { |prob, idx| [prob.to_i, format('%02d', idx % 44 + 1)] }
     probabs.filter! { |prob, _| prob >= probab_thresh }.sort_by! { |prob, idx| [-prob, idx] }
 
-    subm_hash = { 'problem-id': prob_info['id'], 'answers': probabs.map(&:last).uniq.take(prob_info['data']) }
-    subm = JSON.pretty_generate subm_hash
+    #subm_hash = { "problem-id": prob_info['id'], "answers": probabs.map(&:last).uniq.take(prob_info['data']) }
+    subm_hash = { "problem_id": prob_info['id'], "answers": probabs.map(&:last).uniq.take(prob_info['data']) }
+    subm = JSON.pretty_generate(subm_hash)
     File.open("./history/results/#{prob_info['id']}.txt", 'w') { |file| file.puts result }
     File.open("./history/submits/#{prob_info['id']}.json", 'w') { |file| file.puts subm }
     subm
