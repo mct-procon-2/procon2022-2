@@ -29,11 +29,10 @@ vector<int> feaindex_t;
 int main()
 {
 	int max_num = 20;
-	string probname = "./wave_file/mix0.wav";
-	cout << "音声ファイル名>";
+	string headname = "problems/", probname;
+	cout << "音声ファイル名 > problems/";
 	cin >> probname;
-	cout << "音声が混ざってる数>";
-	cin >> max_num;
+	probname = headname + probname;
 
 	clock_t start_t = clock();
 	FILE* fp;
@@ -48,10 +47,13 @@ int main()
 	//cout << t_size << endl;
 	fclose(fp);
 
+	cout << "音声が混ざってる数>";
+	cin >> max_num;
+
 	int choiced = 0;
 	vector<pair<bool, string>> miv(88);
 	int mivindex = 0;
-	priority_queue<pair<int, pair<string, int>>> er;
+	priority_queue<pair<pair<int, int>, pair<string, int>>> er;
 	char EJ[2] = { 'E', 'J' };
 	for (const char& ej : EJ) for (int n = 1; n <= 44; n++)
 	{
@@ -80,7 +82,7 @@ int main()
 			bool ok = false;
 			for (int j = i; j < i + 200; j++)
 			{
-				if (abs(wave_s[i]) > 300)
+				if (abs(wave_s[i]) > 1000)
 				{
 					ok = true;
 					break;
@@ -93,10 +95,10 @@ int main()
 		//cout << fs_size << endl;
 
 
-		//一致するかを見る
+		//類似度を見る
 		{
 			bool choice = false;
-			int start = -1;
+			int start = INF, end = -1;
 			for (const auto& l : feaindex_s)
 			{
 				const int r = l + 200;
@@ -104,6 +106,7 @@ int main()
 #pragma omp parallel
 				{
 					bool ok = false;
+					int st = INF;
 #pragma omp for
 					for (int t = -l; t < t_size - r; t++)
 					{
@@ -111,51 +114,89 @@ int main()
 						bool okk = true;
 						for (int i = l; i < r; i++)
 						{
-							if (wave_s[i] == wave_t[t + i])
+							if (abs(wave_s[i] - wave_t[t + i]) < 100)
 								continue;
 							okk = false;
 							break;
 						}
 						if (okk)
 						{
-							start = t + l;
+							chmin(st, t + l);
 							ok = true;
 						}
 					}
 #pragma omp critical
 					{
 						if (ok)
+						{
 							choice = true;
+							choiced++;
+							miv[mivindex] = { choice, target };
+							mivindex++;
+							chmin(start, st);
+						}
 					}
 				}
+				if (choiced == max_num) 
+					goto finish;
+
 				if (choice)
 				{
-					er.push({ start, {target, l} });
-					choiced++;
+#pragma omp parallel
+					{
+						bool ok = false;
+						int en = -1;
+#pragma omp for
+						for (int t = min(t_size - start + l - r, s_size - r); t >= max(-l, -start); t--)
+						{
+							if (ok) continue;
+							bool okk = true;
+							for (int i = l + t; i < r + t ; i++)
+							{
+								if (abs(wave_s[i] - wave_t[start - l + i]) < 100)
+									continue;
+								okk = false;
+								break;
+							}
+							if (okk)
+							{
+								chmax(en, start - l + r + t);
+								ok = true;
+							}
+						}
+#pragma omp critical
+						{
+							if (ok)
+							{
+								chmax(end, en);
+							}
+						}
+					}
+					er.push({ {start, end}, {target, l} });
 					break;
 				}
 			}
-			miv[mivindex] = { choice, target };
-			mivindex++;
 			cout << choice << endl;
+			cout << endl;
 		}
-		cout << endl;
 	}
 
 
-	if(choiced < max_num) 
+	if (choiced < max_num)
 	{
 		while (!er.empty())
 		{
 
 			//消す
-			while(!er.empty()) {
+			while (!er.empty())
+			{
 				//cout << "erase" << endl;
 				auto v = er.top();
 				er.pop();
-				int start_v = v.first;
+				int start_v = v.first.first, end_v = v.first.second;
 				string target_v = v.second.first;
 				int l_v = v.second.second;
+				cout << start_v << " " << end_v << endl;
 
 				memset(wave_s, 0, sizeof wave_s);
 				string filename = "./JKspeech/" + target_v + ".wav";
@@ -169,31 +210,22 @@ int main()
 				int s_size = fread(wave_s, 2, 1010101, fp);
 				fclose(fp);
 
-				int wide = 0;
-				for (int i = l_v; i < l_v + wide + 24000; i++)
-				{
-					if (i < 0) continue;
-					if (start_v + i - l_v < 0) continue;
-					if (i >= s_size) break;
-					if (start_v + i - l_v >= t_size) break;
-					wave_t[start_v + i - l_v] -= wave_s[i];
-					if (wave_t[start_v + i - l_v] == 0)
-					{
-						wide++;
-					}
-				}
-				wide = 0;
-				for (int i = l_v - 1; i >= l_v - wide - 23800; i--)
+				
+				for (int i = start_v - 1; i >= start_v - 12000; i--)
 				{
 					if (i < 0) break;
-					if (start_v + i - l_v < 0) break;
-					if (i >= s_size) continue;
-					if (start_v + i - l_v >= t_size) continue;
-					wave_t[start_v + i - l_v] -= wave_s[i];
-					if (wave_t[start_v + i - l_v] == 0)
-					{
-						wide++;
-					}
+					if (i - start_v + l_v < 0) break;
+					wave_t[i] -= wave_s[i - start_v + l_v];
+				}
+				for (int i = start_v; i < end_v; i++)
+				{
+					wave_t[i] -= wave_s[i - start_v + l_v];
+				}
+				for (int i = end_v + 1; i < end_v + 12000; i++)
+				{
+					if (i >= t_size) break;
+					if (i - start_v + l_v >= s_size) break;
+					wave_t[i] -= wave_s[i - start_v + l_v];
 				}
 			}
 
@@ -232,7 +264,7 @@ int main()
 						bool ok = false;
 						for (int j = i; j < i + 200; j++)
 						{
-							if (abs(wave_s[i]) > 300)
+							if (abs(wave_s[i]) > 1000)
 							{
 								ok = true;
 								break;
@@ -243,67 +275,112 @@ int main()
 					}
 
 
-					//一致するかを見る
+					//類似度を見る
 					{
 						bool choice = false;
-						int start = -1;
+						int start = INF, end = -1;
 						for (const auto& l : feaindex_s)
 						{
 							const int r = l + 200;
 #pragma omp parallel
 							{
 								bool ok = false;
+								int st = INF;
 #pragma omp for
-								for (int t = -l; t < t_size - r; t++)
+								for (int t = t_size - r; t >= -l; t--)
 								{
 									if (ok) continue;
 									bool okk = true;
 									for (int i = l; i < r; i++)
 									{
-										if (wave_s[i] == wave_t[t + i])
+										if (abs(wave_s[i] - wave_t[t + i]) < 100)
 											continue;
 										okk = false;
 										break;
 									}
 									if (okk)
 									{
-										start = t + l;
+										chmin(st, t + l);
 										ok = true;
 									}
 								}
 #pragma omp critical
 								{
 									if (ok)
+									{
 										choice = true;
+										choiced++;
+										miv[mivindex] = { (choice ? -1 : 0), target };
+										mivindex++;
+										chmin(start, st);
+									}
 								}
 							}
+							if (choiced == max_num)
+								goto finish;
 							if (choice)
 							{
-								er.push({ start, {target, l} });
-								choiced++;
+#pragma omp parallel
+								{
+									bool ok = false;
+									int en = -1;
+#pragma omp for
+									for (int t = min(t_size - start + l - r, s_size - r); t >= max(-l, -start); t--)
+									{
+										if (ok) continue;
+										bool okk = true;
+										for (int i = l + t; i < r + t; i++)
+										{
+											if (abs(wave_s[i] - wave_t[start - l + i]) < 100)
+												continue;
+											okk = false;
+											break;
+										}
+										if (okk)
+										{
+											chmax(en, start - l + r + t);
+											ok = true;
+										}
+									}
+#pragma omp critical
+									{
+										if (ok)
+										{
+											chmax(end, en);
+										}
+									}
+								}
+								er.push({ {start, end}, {target, l} });
 								break;
 							}
 						}
 						cout << choice << endl;
 						cout << endl;
-						miv[mivindex] = { (choice ? -1 : 0), target };
-						mivindex++;
-						if (choiced == max_num)
-							goto finish;
 					}
 				}
 			}//探すend
 		}
 	}
 
-	finish:
+finish:
 	//出力
 	for (int i = 0; i < 88; i++)
 	{
-		if(miv[i].first)
+		if (miv[i].first)
 			cout << miv[i].second << " ";
 	}
 	cout << endl;
+
+	ofstream ofs("result.txt");
+	for (int i = 0; i < 88; i++)
+	{
+		if (miv[i].first)
+			ofs << 100 << " ";
+		else
+			ofs << 0 << " ";
+	}
+	ofs << endl;
+
 	cout << "time:" << (double)(clock() - start_t) / CLOCKS_PER_SEC << endl;
 
 	return 0;

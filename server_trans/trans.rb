@@ -85,7 +85,6 @@ class Trans
     probabs = result.split.map.with_index { |prob, idx| [prob.to_i, format('%02d', idx % 44 + 1)] }
     probabs.filter! { |prob, _| prob >= probab_thresh }.sort_by! { |prob, idx| [-prob, idx] }
 
-    #subm_hash = { "problem-id": prob_info['id'], "answers": probabs.map(&:last).uniq.take(prob_info['data']) }
     subm_hash = { "problem_id": prob_info['id'], "answers": probabs.map(&:last).uniq.take(prob_info['data']) }
     subm = JSON.pretty_generate(subm_hash)
     File.open("./history/results/#{prob_info['id']}.txt", 'w') { |file| file.puts result }
