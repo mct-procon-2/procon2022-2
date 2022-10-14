@@ -21,10 +21,14 @@ i64 ceil_div(i64 a, i64 b) { return (a + b - 1) / b; }
 mt19937_64 rnd(time(NULL));
 
 
+#define Time_range 200
 
+inline i64 pow2(i64 a) { return a * a; }
 
 char nodata[44];
 short wave_t[1010101], wave_s[1010101];
+short wave_s1[1010101], wave_t1[1010101];
+short wave_s2[1010101], wave_t2[1010101];
 vector<int> feaindex_t;
 int main()
 {
@@ -47,11 +51,26 @@ int main()
 	//cout << t_size << endl;
 	fclose(fp);
 
+	for (int i = 0; i < t_size - 5; i++)
+	{
+		int cnt = 0;
+		for (int j = 1; j < 5; j++)
+			cnt += wave_t[i + j];
+		wave_t1[i] = cnt/4 - wave_t[i];
+	}
+	//for (int i = 0; i < t_size - 2; i++)
+	//{
+	//	wave_t2[i] = wave_t1[i + 2] - wave_t1[i];
+	//}
+
 	cout << "音声が混ざってる数>";
 	cin >> max_num;
-	cout << "許容するズレ（1000とか）>";
-	i64 range = 1000;
+	cout << "許容するズレ（300とか）>";
+	i64 range = 300;
 	cin >> range;
+	cout << "逆位相の範囲（24000とか）>";
+	int rerange = 24000;
+	cin >> rerange;
 
 	int choiced = 0;
 	vector<pair<bool, string>> miv(88);
@@ -61,6 +80,8 @@ int main()
 	for (const char& ej : EJ) for (int n = 1; n <= 44; n++)
 	{
 		memset(wave_s, 0, sizeof wave_s);
+		memset(wave_s1, 0, sizeof wave_s1);
+		memset(wave_s2, 0, sizeof wave_s2);
 		vector<int> feaindex_s;
 		string target;
 		target += ej;
@@ -80,12 +101,12 @@ int main()
 		//cout << s_size << endl;
 		fclose(fp);
 
-		for (int i = 0; i < s_size - 200; i += 200)
+		for (int i = 0; i < s_size - Time_range; i += Time_range)
 		{
 			bool ok = false;
-			for (int j = i; j < i + 200; j++)
+			for (int j = i; j < i + Time_range; j++)
 			{
-				if (abs(wave_s[i]) > 1000)
+				if (abs(wave_s[i]) > 1500)
 				{
 					ok = true;
 					break;
@@ -97,6 +118,19 @@ int main()
 		int fs_size = feaindex_s.size();
 		//cout << fs_size << endl;
 
+		for (int i = 0; i < s_size - 5; i++)
+		{
+			int cnt = 0;
+			for (int j = 1; j < 5; j++)
+			{
+				cnt += wave_s[i + j];
+			}
+			wave_s1[i] = cnt / 4 - wave_s[i];
+		}
+		//for (int i = 0; i < s_size - 2; i++)
+		//{
+		//	wave_s2[i] = wave_s1[i + 2] - wave_s1[i];
+		//}
 
 		//類似度を見る
 		{
@@ -104,7 +138,8 @@ int main()
 			int start = INF, end = -1;
 			for (const auto& l : feaindex_s)
 			{
-				const int r = l + 200;
+				const int r = l + Time_range;
+
 				//cout << r << endl;
 #pragma omp parallel
 				{
@@ -115,19 +150,39 @@ int main()
 					{
 						if (ok) continue;
 						bool cnt_ok = true;
-						i64 cnt = 0;
+						i64 cnt = 0, cnt1 = 0, cnt2 = 0;
 						for (int i = l; i < r; i++)
 						{
-							cnt += (wave_s[i] - wave_t[t + i]) * (wave_s[i] - wave_t[t + i]);
-							if (cnt > range * (r - l))
+							cnt += pow2(wave_s[i] - wave_t[t + i]);
+							if (cnt > range * (Time_range))
 							{
 								cnt_ok = false;
 								break;
 							}
 						}
+						//for (int i = l; i < r-5; i++)
+						//{
+						//	cnt1 += pow2(wave_s1[i] - wave_t1[t + i]);
+						//	if (cnt1 > range * (Time_range - 5))
+						//	{
+						//		cnt_ok = false;
+						//		break;
+						//	}
+						//}
+						//for (int i = l; i < r - 2; i++)
+						//{
+						//	cnt2 += pow2(wave_s2[i] - wave_t2[t + i]);
+						//	if (cnt2 > range * (Time_range - 2))
+						//	{
+						//		cnt_ok = false;
+						//		break;
+						//	}
+						//}
 						if (cnt_ok)
-						//if (cnt <= range * (r - l))
+						//if (cnt <= range * (Time_range))
 						{
+							//cout << cnt << " " << cnt1 << " " << cnt2 << endl;
+							cout << cnt << endl;
 							chmin(st, t + l);
 							ok = true;
 						}
@@ -154,20 +209,38 @@ int main()
 						{
 							if (ok) continue;
 							bool cnt_ok = true;
-							i64 cnt = 0;
+							i64 cnt = 0, cnt1 = 0, cnt2 = 0;
 							for (int i = l + t; i < r + t; i++)
 							{
-								cnt += (wave_s[i] - wave_t[start - l + i]) * (wave_s[i] - wave_t[start - l + i]);
-								if (cnt > range * (r - l))
+								cnt += pow2(wave_s[i] - wave_t[start - l + i]);
+								if (cnt > range * (Time_range))
 								{
 									cnt_ok = false;
 									break;
 								}
 							}
+							//for (int i = l + t; i < r + t - 5; i++)
+							//{
+							//	cnt1 += pow2(wave_s1[i] - wave_t1[start - l + i]);
+							//	if (cnt1 > range * (Time_range - 5))
+							//	{
+							//		cnt_ok = false;
+							//		break;
+							//	}
+							//}
+							//for (int i = l + t; i < r + t - 2; i++)
+							//{
+							//	cnt2 += pow2(wave_s2[i] - wave_t2[start - l + i]);
+							//	if (cnt2 > range * (Time_range - 2))
+							//	{
+							//		cnt_ok = false;
+							//		break;
+							//	}
+							//}
 							if (cnt_ok)
-							//if (cnt <= range * (r - l))
+							//if (cnt <= range * (Time_range))
 							{
-								cout << cnt << endl;
+								//cout << cnt << endl;
 								chmax(en, start - l + r + t);
 								ok = true;
 							}
@@ -223,7 +296,7 @@ int main()
 				fclose(fp);
 
 				
-				for (int i = start_v - 1; i >= start_v - 2400; i--)
+				for (int i = start_v - 1; i >= start_v - rerange; i--)
 				{
 					if (i < 0) break;
 					if (i - start_v + l_v < 0) break;
@@ -233,7 +306,7 @@ int main()
 				{
 					wave_t[i] -= wave_s[i - start_v + l_v];
 				}
-				for (int i = end_v + 1; i < end_v + 2400; i++)
+				for (int i = end_v + 1; i < end_v + rerange; i++)
 				{
 					if (i >= t_size) break;
 					if (i - start_v + l_v >= s_size) break;
@@ -241,23 +314,34 @@ int main()
 				}
 			}
 
+			for (int i = 0; i < t_size - 1; i++)
+			{
+				int cnt = 0;
+				for (int j = 1; j < 5; j++)
+				{
+					cnt += wave_t[i + j];
+				}
+				wave_t1[i] = cnt / 4 - wave_t[i];
+			}
+			//for (int i = 0; i < t_size - 2; i++)
+			//{
+			//	wave_t2[i] = wave_t1[i + 1] - wave_t1[i];
+			//}
+
 			//探す
 			{
 				//cout << "search" << endl;
 				mivindex = 0;
 				for (const char& ej : EJ) for (int n = 1; n <= 44; n++)
 				{
-					if (!(mivindex == n - 1 + 44 || mivindex == n - 1))
-					{
-						cout << "?" << endl;
-						exit(0);
-					}
 					if (miv[n - 1].first || miv[n - 1 + 44].first)
 					{
 						mivindex++;
 						continue;
 					}
 					memset(wave_s, 0, sizeof wave_s);
+					memset(wave_s1, 0, sizeof wave_s1);
+					memset(wave_s2, 0, sizeof wave_s2);
 					vector<int> feaindex_s;
 					string target;
 					target += ej;
@@ -276,12 +360,12 @@ int main()
 					int s_size = fread(wave_s, 2, 1010101, fp);
 					fclose(fp);
 
-					for (int i = 0; i < s_size - 200; i += 200)
+					for (int i = 0; i < s_size - Time_range; i += Time_range)
 					{
 						bool ok = false;
-						for (int j = i; j < i + 200; j++)
+						for (int j = i; j < i + Time_range; j++)
 						{
-							if (abs(wave_s[i]) > 1000)
+							if (abs(wave_s[i]) > 1500)
 							{
 								ok = true;
 								break;
@@ -291,6 +375,19 @@ int main()
 						feaindex_s.emplace_back(i);
 					}
 
+					for (int i = 0; i < s_size - 5; i++)
+					{
+						int cnt = 0;
+						for (int j = 1; j < 5; j++)
+						{
+							cnt += wave_s[i + j];
+						}
+						wave_s1[i] = cnt / 4 - wave_s[i];
+					}
+					//for (int i = 0; i < s_size - 2; i++)
+					//{
+					//	wave_s2[i] = wave_s1[i + 1] - wave_s1[i];
+					//}
 
 					//類似度を見る
 					{
@@ -298,7 +395,7 @@ int main()
 						int start = INF, end = -1;
 						for (const auto& l : feaindex_s)
 						{
-							const int r = l + 200;
+							const int r = l + Time_range;
 #pragma omp parallel
 							{
 								bool ok = false;
@@ -309,19 +406,39 @@ int main()
 									if (ok) continue;
 
 									bool cnt_ok = true;
-									i64 cnt = 0;
+									i64 cnt = 0, cnt1 = 0, cnt2 = 0;
 									for (int i = l; i < r; i++)
 									{
-										cnt += (wave_s[i] - wave_t[t + i]) * (wave_s[i] - wave_t[t + i]);
-										if (cnt > range * (r - l))
+										cnt += pow2(wave_s[i] - wave_t[t + i]);
+										if (cnt > range * (Time_range))
 										{
 											cnt_ok = false;
 											break;
 										}
 									}
+									//for (int i = l; i < r-5; i++)
+									//{
+									//	cnt1 += pow2(wave_s1[i] - wave_t1[t + i]);
+									//	if (cnt1 > range * (Time_range - 5))
+									//	{
+									//		cnt_ok = false;
+									//		break;
+									//	}
+									//}
+									//for (int i = l; i < r - 2; i++)
+									//{
+									//	cnt2 += pow2(wave_s2[i] - wave_t2[t + i]);
+									//	if (cnt2 > range * (Time_range - 2))
+									//	{
+									//		cnt_ok = false;
+									//		break;
+									//	}
+									//}
 									if (cnt_ok)
 									//if(cnt <= range * (r-l))
 									{
+										//cout << cnt << " " << cnt1 << " " << cnt2 << endl;
+										cout << cnt << endl;
 										chmin(st, t + l);
 										ok = true;
 									}
@@ -349,18 +466,36 @@ int main()
 										if (ok) continue;
 
 										bool cnt_ok = true;
-										i64 cnt = 0;
+										i64 cnt = 0, cnt1 = 0, cnt2 = 0;
 										for (int i = l + t; i < r + t; i++)
 										{
-											cnt += (wave_s[i] - wave_t[start - l + i]) * (wave_s[i] - wave_t[start - l + i]);
-											if (cnt > range * (r - l))
+											cnt += pow2(wave_s[i] - wave_t[start - l + i]);
+											if (cnt > range * (Time_range))
 											{
 												cnt_ok = false;
 												break;
 											}
 										}
+										//for (int i = l + t; i < r + t-5; i++)
+										//{
+										//	cnt1 += pow2(wave_s1[i] - wave_t1[start - l + i]);
+										//	if (cnt1 > range * (Time_range-5))
+										//	{
+										//		cnt_ok = false;
+										//		break;
+										//	}
+										//}
+										//for (int i = l + t; i < r + t - 2; i++)
+										//{
+										//	cnt2 += pow2(wave_s2[i] - wave_t2[start - l + i]);
+										//	if (cnt2 > range * (Time_range - 2))
+										//	{
+										//		cnt_ok = false;
+										//		break;
+										//	}
+										//}
 										if (cnt_ok)
-										//if (cnt <= range * (r - l))
+										//if (cnt <= range * (Time_range))
 										{
 											chmax(en, start - l + r + t);
 											ok = true;
