@@ -49,6 +49,9 @@ int main()
 
 	cout << "音声が混ざってる数>";
 	cin >> max_num;
+	cout << "許容するズレ（1000とか）>";
+	i64 range = 1000;
+	cin >> range;
 
 	int choiced = 0;
 	vector<pair<bool, string>> miv(88);
@@ -111,15 +114,19 @@ int main()
 					for (int t = -l; t < t_size - r; t++)
 					{
 						if (ok) continue;
-						bool okk = true;
+						bool cnt_ok = true;
+						i64 cnt = 0;
 						for (int i = l; i < r; i++)
 						{
-							if (abs(wave_s[i] - wave_t[t + i]) < 100)
-								continue;
-							okk = false;
-							break;
+							cnt += (wave_s[i] - wave_t[t + i]) * (wave_s[i] - wave_t[t + i]);
+							if (cnt > range * (r - l))
+							{
+								cnt_ok = false;
+								break;
+							}
 						}
-						if (okk)
+						if (cnt_ok)
+						//if (cnt <= range * (r - l))
 						{
 							chmin(st, t + l);
 							ok = true;
@@ -129,16 +136,12 @@ int main()
 					{
 						if (ok)
 						{
-							choice = true;
 							choiced++;
-							miv[mivindex] = { choice, target };
-							mivindex++;
+							choice = true;
 							chmin(start, st);
 						}
 					}
 				}
-				if (choiced == max_num) 
-					goto finish;
 
 				if (choice)
 				{
@@ -150,16 +153,21 @@ int main()
 						for (int t = min(t_size - start + l - r, s_size - r); t >= max(-l, -start); t--)
 						{
 							if (ok) continue;
-							bool okk = true;
-							for (int i = l + t; i < r + t ; i++)
+							bool cnt_ok = true;
+							i64 cnt = 0;
+							for (int i = l + t; i < r + t; i++)
 							{
-								if (abs(wave_s[i] - wave_t[start - l + i]) < 100)
-									continue;
-								okk = false;
-								break;
+								cnt += (wave_s[i] - wave_t[start - l + i]) * (wave_s[i] - wave_t[start - l + i]);
+								if (cnt > range * (r - l))
+								{
+									cnt_ok = false;
+									break;
+								}
 							}
-							if (okk)
+							if (cnt_ok)
+							//if (cnt <= range * (r - l))
 							{
+								cout << cnt << endl;
 								chmax(en, start - l + r + t);
 								ok = true;
 							}
@@ -176,8 +184,12 @@ int main()
 					break;
 				}
 			}
+			miv[mivindex] = { choice, target };
+			mivindex++;
 			cout << choice << endl;
 			cout << endl;
+			if (choiced == max_num)
+				goto finish;
 		}
 	}
 
@@ -211,7 +223,7 @@ int main()
 				fclose(fp);
 
 				
-				for (int i = start_v - 1; i >= start_v - 12000; i--)
+				for (int i = start_v - 1; i >= start_v - 2400; i--)
 				{
 					if (i < 0) break;
 					if (i - start_v + l_v < 0) break;
@@ -221,7 +233,7 @@ int main()
 				{
 					wave_t[i] -= wave_s[i - start_v + l_v];
 				}
-				for (int i = end_v + 1; i < end_v + 12000; i++)
+				for (int i = end_v + 1; i < end_v + 2400; i++)
 				{
 					if (i >= t_size) break;
 					if (i - start_v + l_v >= s_size) break;
@@ -235,6 +247,11 @@ int main()
 				mivindex = 0;
 				for (const char& ej : EJ) for (int n = 1; n <= 44; n++)
 				{
+					if (!(mivindex == n - 1 + 44 || mivindex == n - 1))
+					{
+						cout << "?" << endl;
+						exit(0);
+					}
 					if (miv[n - 1].first || miv[n - 1 + 44].first)
 					{
 						mivindex++;
@@ -290,15 +307,20 @@ int main()
 								for (int t = t_size - r; t >= -l; t--)
 								{
 									if (ok) continue;
-									bool okk = true;
+
+									bool cnt_ok = true;
+									i64 cnt = 0;
 									for (int i = l; i < r; i++)
 									{
-										if (abs(wave_s[i] - wave_t[t + i]) < 100)
-											continue;
-										okk = false;
-										break;
+										cnt += (wave_s[i] - wave_t[t + i]) * (wave_s[i] - wave_t[t + i]);
+										if (cnt > range * (r - l))
+										{
+											cnt_ok = false;
+											break;
+										}
 									}
-									if (okk)
+									if (cnt_ok)
+									//if(cnt <= range * (r-l))
 									{
 										chmin(st, t + l);
 										ok = true;
@@ -308,16 +330,13 @@ int main()
 								{
 									if (ok)
 									{
-										choice = true;
 										choiced++;
-										miv[mivindex] = { (choice ? -1 : 0), target };
-										mivindex++;
+										choice = true;
 										chmin(start, st);
 									}
+									
 								}
 							}
-							if (choiced == max_num)
-								goto finish;
 							if (choice)
 							{
 #pragma omp parallel
@@ -328,15 +347,20 @@ int main()
 									for (int t = min(t_size - start + l - r, s_size - r); t >= max(-l, -start); t--)
 									{
 										if (ok) continue;
-										bool okk = true;
+
+										bool cnt_ok = true;
+										i64 cnt = 0;
 										for (int i = l + t; i < r + t; i++)
 										{
-											if (abs(wave_s[i] - wave_t[start - l + i]) < 100)
-												continue;
-											okk = false;
-											break;
+											cnt += (wave_s[i] - wave_t[start - l + i]) * (wave_s[i] - wave_t[start - l + i]);
+											if (cnt > range * (r - l))
+											{
+												cnt_ok = false;
+												break;
+											}
 										}
-										if (okk)
+										if (cnt_ok)
+										//if (cnt <= range * (r - l))
 										{
 											chmax(en, start - l + r + t);
 											ok = true;
@@ -354,8 +378,12 @@ int main()
 								break;
 							}
 						}
+						miv[mivindex] = { choice, target };
+						mivindex++;
 						cout << choice << endl;
 						cout << endl;
+						if (choiced == max_num)
+							goto finish;
 					}
 				}
 			}//探すend
