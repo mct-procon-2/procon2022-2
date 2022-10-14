@@ -1,6 +1,6 @@
 # procon2022
 
-server_trans/に入って
+Base/に入って
 cmd上で
 
 
