@@ -6,9 +6,12 @@ print("混ぜるファイル数を入力!!")
 num = int(input())
 mix = -1
 for i in range(0, num):
-    print("ファイル名を入力(拡張子なし)(順番に)")
-    s = input()
-    wav = AudioSegment.from_file("./" + s + ".wav", format="wav")
+    print("ファイル名を入力(順番に)")
+    s = str(input())
+    if (s[-1] != "v" or s[-2] != "a" or s[-3] != "w" or s[-4] != "."):
+        s += ".wav"
+
+    wav = AudioSegment.from_file(s, format="wav")
     if mix == -1:
       mix = wav
     else:
