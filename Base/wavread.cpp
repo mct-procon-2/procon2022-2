@@ -590,7 +590,7 @@ int main()
 						}
 						miv[mivindex] = { choice, target };
 						mivindex++;
-						cout << mi << " " << mi1 << endl;
+						//cout << mi << " " << mi1 << endl;
 						cout << choice << endl;
 						cout << endl;
 						if (choiced == max_num)
