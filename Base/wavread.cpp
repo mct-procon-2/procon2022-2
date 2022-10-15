@@ -30,6 +30,7 @@ short wave_t[1010101], wave_s[1010101];
 short wave_s1[1010101], wave_t1[1010101];
 short wave_s2[1010101], wave_t2[1010101];
 vector<int> feaindex_t;
+vector<pair<int, string>> mis, mis1;
 int main()
 {
 	int max_num = 20;
@@ -136,6 +137,7 @@ int main()
 		{
 			bool choice = false;
 			int start = INF, end = -1;
+			i64 mi = LINF, mi1 = LINF, mi2 = LINF;
 			for (const auto& l : feaindex_s)
 			{
 				const int r = l + Time_range;
@@ -150,25 +152,39 @@ int main()
 					{
 						if (ok) continue;
 						bool cnt_ok = true;
+						cnt_ok = false;
 						i64 cnt = 0, cnt1 = 0, cnt2 = 0;
 						for (int i = l; i < r; i++)
 						{
 							cnt += pow2(wave_s[i] - wave_t[t + i]);
-							if (cnt > range * (Time_range))
-							{
-								cnt_ok = false;
-								break;
-							}
+							//if (cnt > range * (Time_range))
+							//{
+							//	cnt_ok = false;
+							//	break;
+							//}
+							if (cnt >= mi) continue;
 						}
-						//for (int i = l; i < r-5; i++)
-						//{
-						//	cnt1 += pow2(wave_s1[i] - wave_t1[t + i]);
-						//	if (cnt1 > range * (Time_range - 5))
-						//	{
-						//		cnt_ok = false;
-						//		break;
-						//	}
-						//}
+						for (int i = l; i < r-5; i++)
+						{
+							cnt1 += pow2(wave_s1[i] - wave_t1[t + i]);
+							//if (cnt1 > range * (Time_range - 5))
+							//{
+							//	cnt_ok = false;
+							//	break;
+							//}
+							//int a = (wave_s1[i] >= 1 ? 1 : (wave_s1[i] <= -1 ? -1 : 0));
+							//int b = (wave_t1[t + i] >= 1 ? 1 : (wave_t1[t + i] <= -1 ? -1 : 0));
+							//if (a != b)
+							//{
+							//	cnt1++;
+							//	if (cnt1 > range)
+							//	{
+							//		cnt_ok = false;
+							//		break;
+							//	}
+							//}
+							if (cnt1 >= mi1) continue;
+						}
 						//for (int i = l; i < r - 2; i++)
 						//{
 						//	cnt2 += pow2(wave_s2[i] - wave_t2[t + i]);
@@ -185,6 +201,14 @@ int main()
 							cout << cnt << endl;
 							chmin(st, t + l);
 							ok = true;
+						}
+						if (chmin(mi, cnt))
+						{
+							cout << cnt << " " << cnt1 << endl;
+						}
+						if (chmin(mi1, cnt1))
+						{
+							cout << cnt << " " << cnt1 << endl;
 						}
 					}
 #pragma omp critical
@@ -219,15 +243,26 @@ int main()
 									break;
 								}
 							}
-							//for (int i = l + t; i < r + t - 5; i++)
-							//{
-							//	cnt1 += pow2(wave_s1[i] - wave_t1[start - l + i]);
-							//	if (cnt1 > range * (Time_range - 5))
-							//	{
-							//		cnt_ok = false;
-							//		break;
-							//	}
-							//}
+							for (int i = l + t; i < r + t - 5; i++)
+							{
+								cnt1 += pow2(wave_s1[i] - wave_t1[start - l + i]);
+								if (cnt1 > range * (Time_range - 5))
+								{
+									cnt_ok = false;
+									break;
+								}
+								//int a = (wave_s1[i] >= 1 ? 1 : (wave_s1[i] <= -1 ? -1 : 0));
+								//int b = (wave_t1[start - l + i] >= 1 ? 1 : (wave_t1[start - l + i] <= -1 ? -1 : 0));
+								//if (a != b)
+								//{
+								//	cnt1++;
+								//	if (cnt1 > range)
+								//	{
+								//		cnt_ok = false;
+								//		break;
+								//	}
+								//}
+							}
 							//for (int i = l + t; i < r + t - 2; i++)
 							//{
 							//	cnt2 += pow2(wave_s2[i] - wave_t2[start - l + i]);
@@ -259,13 +294,30 @@ int main()
 			}
 			miv[mivindex] = { choice, target };
 			mivindex++;
+			cout << mi << " " << mi1 << endl;
+			mis.push_back({ mi, target });
+			mis1.push_back({ mi1, target });
 			cout << choice << endl;
 			cout << endl;
 			if (choiced == max_num)
 				goto finish;
 		}
 	}
+	sort(mis.begin(), mis.end());
+	sort(mis1.begin(), mis1.end());
 
+	cout << "\n0:sort" << endl;
+	for (const auto ab : mis)
+	{
+		cout << ab.first << " " << ab.second << endl;
+	}
+	cout << "\n1:sort" << endl;
+	for (const auto ab : mis1)
+	{
+		cout << ab.first << " " << ab.second << endl;
+	}
+
+	return 0;
 
 	if (choiced < max_num)
 	{
@@ -393,6 +445,7 @@ int main()
 					{
 						bool choice = false;
 						int start = INF, end = -1;
+						i64 mi = LINF, mi1 = LINF;
 						for (const auto& l : feaindex_s)
 						{
 							const int r = l + Time_range;
@@ -416,15 +469,26 @@ int main()
 											break;
 										}
 									}
-									//for (int i = l; i < r-5; i++)
-									//{
-									//	cnt1 += pow2(wave_s1[i] - wave_t1[t + i]);
-									//	if (cnt1 > range * (Time_range - 5))
-									//	{
-									//		cnt_ok = false;
-									//		break;
-									//	}
-									//}
+									for (int i = l; i < r-5; i++)
+									{
+										cnt1 += pow2(wave_s1[i] - wave_t1[t + i]);
+										if (cnt1 > range * (Time_range - 5))
+										{
+											cnt_ok = false;
+											break;
+										}
+										//int a = (wave_s1[i] >= 1 ? 1 : (wave_s1[i] <= -1 ? -1 : 0));
+										//int b = (wave_t1[t + i] >= 1 ? 1 : (wave_t1[t + i] <= -1 ? -1 : 0));
+										//if (a != b)
+										//{
+										//	cnt1++;
+										//	if (cnt1 > range)
+										//	{
+										//		cnt_ok = false;
+										//		break;
+										//	}
+										//}
+									}
 									//for (int i = l; i < r - 2; i++)
 									//{
 									//	cnt2 += pow2(wave_s2[i] - wave_t2[t + i]);
@@ -476,15 +540,26 @@ int main()
 												break;
 											}
 										}
-										//for (int i = l + t; i < r + t-5; i++)
-										//{
-										//	cnt1 += pow2(wave_s1[i] - wave_t1[start - l + i]);
-										//	if (cnt1 > range * (Time_range-5))
-										//	{
-										//		cnt_ok = false;
-										//		break;
-										//	}
-										//}
+										for (int i = l + t; i < r + t-5; i++)
+										{
+											cnt1 += pow2(wave_s1[i] - wave_t1[start - l + i]);
+											if (cnt1 > range * (Time_range-5))
+											{
+												cnt_ok = false;
+												break;
+											}
+											//int a = (wave_s1[i] >= 1 ? 1 : (wave_s1[i] <= -1 ? -1 : 0));
+											//int b = (wave_t1[start - l + i] >= 1 ? 1 : (wave_t1[start - l + i] <= -1 ? -1 : 0));
+											//if (a != b)
+											//{
+											//	cnt1++;
+											//	if (cnt1 > range)
+											//	{
+											//		cnt_ok = false;
+											//		break;
+											//	}
+											//}
+										}
 										//for (int i = l + t; i < r + t - 2; i++)
 										//{
 										//	cnt2 += pow2(wave_s2[i] - wave_t2[start - l + i]);
@@ -515,6 +590,7 @@ int main()
 						}
 						miv[mivindex] = { choice, target };
 						mivindex++;
+						cout << mi << " " << mi1 << endl;
 						cout << choice << endl;
 						cout << endl;
 						if (choiced == max_num)

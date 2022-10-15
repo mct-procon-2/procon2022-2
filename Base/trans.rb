@@ -6,7 +6,7 @@ require 'json'
 
 def main
   trans = Trans.new(
-    'https://procon33-practice.kosen.work',
+    'http://172.28.1.1:80',
     '834b206b66791fdae66002bd740d62699441babc29bb476bfdf0f9b73567e9ea'
   )
 
@@ -40,7 +40,7 @@ class Trans
     @header = { 'procon-token': token }
     @submit_header = { 'procon-token': token, 'Content-Type': 'application/json' }
     @http = Net::HTTP.new(@uri.host, @uri.port)
-    @http.use_ssl = true
+    @http.use_ssl = false
   end
 
   def match_info
