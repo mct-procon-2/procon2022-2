@@ -2,10 +2,10 @@
 
 ## CNN,RNNはダメでした（いろいろ工夫してる途中であきらめた）
 
-Baseにあるwavread.cpp,solve.exeは元々のアイディアのもの
+### Baseにあるwavread.cpp,solve.exeは元々のアイディアのもの
 （微小な間隔が一致する部分を見つけるというアイディア）
 
-wavread2.cpp,solve[2~6].exeは旭川高専のアイディアをもとに作ったもの
+### wavread2.cpp,solve[2~6].exeは旭川高専のアイディアをもとに作ったもの
 
 
 Base/に入って
