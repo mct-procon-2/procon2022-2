@@ -107,7 +107,7 @@ int main()
 			bool ok = false;
 			for (int j = i; j < i + Time_range; j++)
 			{
-				if (abs(wave_s[i]) > 1500)
+				if (abs(wave_s[j]) > 1500)
 				{
 					ok = true;
 					break;
@@ -152,39 +152,38 @@ int main()
 					{
 						if (ok) continue;
 						bool cnt_ok = true;
-						cnt_ok = false;
 						i64 cnt = 0, cnt1 = 0, cnt2 = 0;
 						for (int i = l; i < r; i++)
 						{
 							cnt += pow2(wave_s[i] - wave_t[t + i]);
-							//if (cnt > range * (Time_range))
-							//{
-							//	cnt_ok = false;
-							//	break;
-							//}
-							if (cnt >= mi) continue;
+							if (cnt > range * (Time_range))
+							{
+								cnt_ok = false;
+								break;
+							}
+							//if (cnt >= mi) continue;
 						}
-						for (int i = l; i < r-5; i++)
-						{
-							cnt1 += pow2(wave_s1[i] - wave_t1[t + i]);
-							//if (cnt1 > range * (Time_range - 5))
-							//{
-							//	cnt_ok = false;
-							//	break;
-							//}
-							//int a = (wave_s1[i] >= 1 ? 1 : (wave_s1[i] <= -1 ? -1 : 0));
-							//int b = (wave_t1[t + i] >= 1 ? 1 : (wave_t1[t + i] <= -1 ? -1 : 0));
-							//if (a != b)
-							//{
-							//	cnt1++;
-							//	if (cnt1 > range)
-							//	{
-							//		cnt_ok = false;
-							//		break;
-							//	}
-							//}
-							if (cnt1 >= mi1) continue;
-						}
+						//for (int i = l; i < r-5; i++)
+						//{
+						//	cnt1 += pow2(wave_s1[i] - wave_t1[t + i]);
+						//	if (cnt1 > range * (Time_range - 5))
+						//	{
+						//		cnt_ok = false;
+						//		break;
+						//	}
+						//	//int a = (wave_s1[i] >= 1 ? 1 : (wave_s1[i] <= -1 ? -1 : 0));
+						//	//int b = (wave_t1[t + i] >= 1 ? 1 : (wave_t1[t + i] <= -1 ? -1 : 0));
+						//	//if (a != b)
+						//	//{
+						//	//	cnt1++;
+						//	//	if (cnt1 > range)
+						//	//	{
+						//	//		cnt_ok = false;
+						//	//		break;
+						//	//	}
+						//	//}
+						//	//if (cnt1 >= mi1) continue;
+						//}
 						//for (int i = l; i < r - 2; i++)
 						//{
 						//	cnt2 += pow2(wave_s2[i] - wave_t2[t + i]);
@@ -202,14 +201,15 @@ int main()
 							chmin(st, t + l);
 							ok = true;
 						}
-						if (chmin(mi, cnt))
-						{
-							cout << cnt << " " << cnt1 << endl;
-						}
-						if (chmin(mi1, cnt1))
-						{
-							cout << cnt << " " << cnt1 << endl;
-						}
+						chmin(mi, cnt);
+						//if (chmin(mi, cnt))
+						//{
+						//	cout << cnt << " " << cnt1 << endl;
+						//}
+						//if (chmin(mi1, cnt1))
+						//{
+						//	cout << cnt << " " << cnt1 << endl;
+						//}
 					}
 #pragma omp critical
 					{
@@ -243,26 +243,26 @@ int main()
 									break;
 								}
 							}
-							for (int i = l + t; i < r + t - 5; i++)
-							{
-								cnt1 += pow2(wave_s1[i] - wave_t1[start - l + i]);
-								if (cnt1 > range * (Time_range - 5))
-								{
-									cnt_ok = false;
-									break;
-								}
-								//int a = (wave_s1[i] >= 1 ? 1 : (wave_s1[i] <= -1 ? -1 : 0));
-								//int b = (wave_t1[start - l + i] >= 1 ? 1 : (wave_t1[start - l + i] <= -1 ? -1 : 0));
-								//if (a != b)
-								//{
-								//	cnt1++;
-								//	if (cnt1 > range)
-								//	{
-								//		cnt_ok = false;
-								//		break;
-								//	}
-								//}
-							}
+							//for (int i = l + t; i < r + t - 5; i++)
+							//{
+							//	cnt1 += pow2(wave_s1[i] - wave_t1[start - l + i]);
+							//	if (cnt1 > range * (Time_range - 5))
+							//	{
+							//		cnt_ok = false;
+							//		break;
+							//	}
+							//	//int a = (wave_s1[i] >= 1 ? 1 : (wave_s1[i] <= -1 ? -1 : 0));
+							//	//int b = (wave_t1[start - l + i] >= 1 ? 1 : (wave_t1[start - l + i] <= -1 ? -1 : 0));
+							//	//if (a != b)
+							//	//{
+							//	//	cnt1++;
+							//	//	if (cnt1 > range)
+							//	//	{
+							//	//		cnt_ok = false;
+							//	//		break;
+							//	//	}
+							//	//}
+							//}
 							//for (int i = l + t; i < r + t - 2; i++)
 							//{
 							//	cnt2 += pow2(wave_s2[i] - wave_t2[start - l + i]);
@@ -502,7 +502,7 @@ int main()
 									//if(cnt <= range * (r-l))
 									{
 										//cout << cnt << " " << cnt1 << " " << cnt2 << endl;
-										cout << cnt << endl;
+										//cout << cnt << endl;
 										chmin(st, t + l);
 										ok = true;
 									}

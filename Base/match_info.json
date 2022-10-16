@@ -1,13 +1,14 @@
 {
-  "problems": 2,
+  "problems": 4,
   "bonus_factor": [
     2,
     2,
     1.5,
+    1.2,
     1
   ],
-  "penalty": 5,
-  "change_penalty": 5,
-  "wrong_penalty": 10,
+  "penalty": 50,
+  "change_penalty": 50,
+  "wrong_penalty": 80,
   "correct_point": 100
 }
